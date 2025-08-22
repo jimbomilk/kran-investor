@@ -4,11 +4,11 @@ from app import create_app, db
 from app.models import User, Portfolio
 from werkzeug.security import generate_password_hash
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def test_app():
     """
     Crea y configura una nueva instancia de la aplicación para los tests.
-    Se ejecuta una vez por cada módulo de tests.
+    Se ejecuta una vez por cada función de test.
     """
     app = create_app()
     app.config.update({
@@ -24,7 +24,7 @@ def test_app():
         db.session.remove()
         db.drop_all()
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def client(test_app):
     """Un cliente de prueba para la aplicación."""
     return test_app.test_client()
@@ -50,7 +50,3 @@ def test_user(test_app):
         db.session.commit()
 
         yield user
-
-        # Limpia la base de datos después de cada test
-        db.session.delete(user)
-        db.session.commit()
