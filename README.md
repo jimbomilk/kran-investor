@@ -13,6 +13,8 @@ Tabla de Contenidos
 
 5. Pila Tecnológica (Tech Stack)
 
+6. Estado Actual del Proyecto
+
 6. Hoja de Ruta del Desarrollo (Roadmap)
 
 7. Cómo Empezar (Getting Started)
@@ -99,13 +101,34 @@ Estándares: ERC-20 (para $KRN), ERC-721 (para NFTs).
 
 APIs Externas:
 
-Datos de Mercado: Financial Modeling Prep (FMP) o Alpha Vantage.
+  Datos de Mercado: Financial Modeling Prep (FMP) o Alpha Vantage.
 
 Despliegue:
 
-Frontend: Vercel
+  Repositorio: [kran-investor en GitHub](https://github.com/jimbomilk/kran-investor)
+  Plataforma: Render.com
+  Servicios en Render:
+    - **Web Service (API):** `kran-investor-api`
+    - **PostgreSQL (Base de Datos):** `kran-investor-db`
+  Frontend: Vercel
 
-Backend/DB: Render o Heroku.
+6. Estado Actual del Proyecto
+El backend del proyecto está parcialmente implementado. Se ha construido una base sólida con Flask, SQLAlchemy para la base de datos y JWT para la autenticación.
+
+**Funcionalidades Implementadas:**
+
+*   **Autenticación de Usuarios:**
+    *   `POST /api/auth/register`: Creación de nuevos usuarios.
+    *   `POST /api/auth/login`: Inicio de sesión y obtención de token JWT.
+*   **Gestión de Cartera (Portfolio):**
+    *   `GET /api/portfolio`: Un usuario autenticado puede ver su cartera (dinero virtual y activos).
+    *   `POST /api/portfolio/buy`: Endpoint para simular la compra de un activo.
+    *   `POST /api/portfolio/sell`: Endpoint para simular la venta de un activo.
+*   **Servicio de Mercado:**
+    *   Existe un servicio (`app/services/market_service.py`) que se conecta a la API de Financial Modeling Prep para obtener precios reales.
+
+**Punto Crítico Actual:**
+Las rutas `/buy` y `/sell` **aún no están conectadas al servicio de precios reales**. Actualmente, utilizan una función simulada con precios fijos. El siguiente paso de desarrollo es integrar el `market_service` en estas rutas para que las operaciones se realicen con datos de mercado en tiempo real.
 
 6. Hoja de Ruta del Desarrollo (Roadmap)
 Este proyecto se desarrollará en fases iterativas para asegurar una base sólida antes de añadir complejidad.
@@ -119,15 +142,15 @@ Diseño de la Base de Datos: Definir los esquemas para Usuarios, Carteras y Tran
 
 Backend (API REST):
 
-  - **Autenticación:** Endpoints para registro (`/auth/register`), login (`/auth/login`) y gestión de perfil de usuario con JWT (JSON Web Tokens).
+  - **[✓] Autenticación:** Endpoints para registro (`/auth/register`), login (`/auth/login`) y gestión de perfil de usuario con JWT (JSON Web Tokens).
   - **Cartera (Portfolio):**
-    - `GET /portfolio`: Obtener la cartera actual del usuario (activos, cantidad, valor actual).
-    - `POST /portfolio/buy`: Simular la compra de un activo (validando saldo virtual).
-    - `POST /portfolio/sell`: Simular la venta de un activo (validando tenencia).
+    - **[✓] `GET /portfolio`**: Obtener la cartera actual del usuario (activos, cantidad, valor actual).
+    - **[✓] `POST /portfolio/buy`**: Simular la compra de un activo (validando saldo virtual). *(Nota: Usa precios simulados)*.
+    - **[✓] `POST /portfolio/sell`**: Simular la venta de un activo (validando tenencia). *(Nota: Usa precios simulados)*.
   - **Mercado:**
-    - `GET /market/quote/{ticker}`: Endpoint para obtener la cotización de un activo específico desde la API externa.
-    - `GET /market/search/{query}`: Endpoint para buscar activos.
-  - **Trabajo Programado (Cron Job):** Implementar un script para actualizar periódicamente el valor de las carteras de todos los usuarios.
+    - **[ ] `GET /market/quote/{ticker}`**: Endpoint para obtener la cotización de un activo específico desde la API externa.
+    - **[ ] `GET /market/search/{query}`**: Endpoint para buscar activos.
+  - **[ ] Trabajo Programado (Cron Job):** Implementar un script para actualizar periódicamente el valor de las carteras de todos los usuarios.
 
 Frontend:
 
@@ -187,21 +210,66 @@ Lanzamiento Público: Apertura a todo el mundo y comienzo de las competiciones o
 
 7. Cómo Empezar (Getting Started)
 Esta sección se completará a medida que el proyecto avance.
+Esta sección contiene las instrucciones para configurar y ejecutar el backend del proyecto en un entorno de desarrollo local.
 
 Bash
 
-# Clonar el repositorio
-git clone https://github.com/jimbomilk/kran-investor.git
+### 1. Prerrequisitos
+- Python 3.8 o superior.
+- `pip` y `venv` (generalmente incluidos con Python).
 
-# Navegar al directorio del frontend
-cd kran-investor/frontend
-npm install
+### 2. Configuración del Backend
 
-# Navegar al directorio del backend
-cd ../backend
-pip install -r requirements.txt
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone https://github.com/jimbomilk/kran-investor.git
+    cd kran-investor/backend
+    ```
 
-# Crear un archivo .env en el backend y frontend para las variables de entorno
-# (API Keys, conexión a la base de datos, etc.)
+2.  **Crear y activar un entorno virtual:**
+    ```bash
+    # En Windows
+    python -m venv venv
+    .\venv\Scripts\activate
 
-# (Instrucciones adicionales para ejecutar la aplicación aquí)
+    # En macOS/Linux
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+3.  **Instalar las dependencias:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Configurar las variables de entorno:**
+    Crea un fichero llamado `.env` dentro de la carpeta `backend/` y añade el siguiente contenido. **Necesitarás obtener tu propia clave de API de Financial Modeling Prep.**
+
+    ```
+    # Clave secreta para firmar los tokens JWT. Puedes generar una con: python -c 'import secrets; print(secrets.token_hex())'
+    SECRET_KEY="tu_clave_secreta_aqui"
+
+    # URL de conexión a la base de datos. Para empezar, SQLite es lo más sencillo.
+    DATABASE_URL="sqlite:///site.db"
+
+    # Clave de API de Financial Modeling Prep (https://site.financialmodelingprep.com/developer/docs)
+    FMP_API_KEY="tu_clave_de_api_de_fmp_aqui"
+    ```
+
+5.  **Crear y actualizar la base de datos:**
+    (Asumiendo que se usa Flask-Migrate)
+    ```bash
+    # Si es la primera vez, para crear el repositorio de migraciones:
+    # flask db init
+
+    # Para generar una migración inicial y aplicar los modelos:
+    flask db migrate -m "Initial migration"
+    flask db upgrade
+    ```
+
+6.  **Ejecutar el servidor de desarrollo:**
+    ```bash
+    flask run
+    ```
+
+El servidor estará disponible en `http://127.0.0.1:5000`. Ya puedes usar una herramienta como Postman o Insomnia para probar los endpoints de la API.

@@ -1,32 +1,146 @@
 from flask import jsonify, Blueprint
+from flask import jsonify, Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import User
+from app.models import User, Holding, Transaction, TransactionType
+from app import db
+from decimal import Decimal
 
 portfolio_bp = Blueprint('portfolio', __name__, url_prefix='/api/portfolio')
+# --- Placeholder para el servicio de mercado ---
+# TODO: Reemplazar esto con una llamada real a una API de mercado (ej. Financial Modeling Prep)
+def get_market_price(ticker):
+    """
+    Función simulada para obtener el precio de un activo.
+    Devuelve un precio fijo para fines de prueba.
+    """
+    # Precios de ejemplo para simulación
+    mock_prices = {
+        "AAPL": Decimal("175.50"),
+        "GOOGL": Decimal("140.20"),
+        "TSLA": Decimal("250.00")
+    }
+    price = mock_prices.get(ticker.upper())
+    if price is None:
+        raise ValueError(f"Ticker '{ticker}' not found")
+    return price
+# ---------------------------------------------
 
-@portfolio_bp.route('', methods=['GET'])
-@jwt_required() # ¡Esta línea protege el endpoint!
-def get_portfolio():
+@portfolio_bp.route('/buy', methods=['POST'])
+@jwt_required()
+def buy_asset():
     """
-    Devuelve los detalles de la cartera del usuario autenticado.
+    Permite a un usuario autenticado comprar un activo.
+    Espera un JSON con: {"ticker": "AAPL", "quantity": 10}
     """
-    # Obtenemos la identidad del usuario desde el token JWT
+    data = request.get_json()
+    if not data or 'ticker' not in data or 'quantity' not in data:
+        return jsonify({"error": "Ticker and quantity are required"}), 400
+
+    ticker = data['ticker']
+    try:
+        quantity = Decimal(data['quantity'])
+        if quantity <= 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid quantity"}), 400
+
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
 
-    if not user or not user.portfolio:
-        return jsonify({"error": "Portfolio not found"}), 404
+    try:
+        price = get_market_price(ticker)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
 
-    # Preparamos los datos para la respuesta JSON
-    holdings_data = [
-        {
-            "ticker": holding.ticker_symbol,
-            "quantity": str(holding.quantity), # Convertimos Decimal a string para JSON
-            "average_price": str(holding.average_purchase_price)
-        } for holding in user.portfolio.holdings
-    ]
+    total_cost = price * quantity
 
-    return jsonify({
-        "cash_balance": str(user.portfolio.cash_balance),
-        "holdings": holdings_data
-    }), 200
+    if user.portfolio.cash_balance < total_cost:
+        return jsonify({"error": "Insufficient funds"}), 400
+
+    # Actualizar el balance de efectivo
+    user.portfolio.cash_balance -= total_cost
+
+    # Buscar si el activo ya existe en la cartera
+    holding = Holding.query.filter_by(portfolio_id=user.portfolio.id, ticker_symbol=ticker).first()
+
+    if holding:
+        # Si ya existe, actualizamos el promedio y la cantidad
+        new_quantity = holding.quantity + quantity
+        new_avg_price = ((holding.average_purchase_price * holding.quantity) + total_cost) / new_quantity
+        holding.quantity = new_quantity
+        holding.average_purchase_price = new_avg_price
+    else:
+        # Si no, creamos un nuevo holding
+        new_holding = Holding(
+            portfolio_id=user.portfolio.id,
+            ticker_symbol=ticker,
+            quantity=quantity,
+            average_purchase_price=price
+        )
+        db.session.add(new_holding)
+
+    # Registrar la transacción
+    new_transaction = Transaction(
+        portfolio_id=user.portfolio.id,
+        ticker_symbol=ticker,
+        type=TransactionType.BUY,
+        quantity=quantity,
+        price_per_share=price
+    )
+    db.session.add(new_transaction)
+
+    db.session.commit()
+
+    return jsonify({"message": f"Successfully bought {quantity} of {ticker}", "new_cash_balance": str(user.portfolio.cash_balance)}), 200
+
+
+@portfolio_bp.route('/sell', methods=['POST'])
+@jwt_required()
+def sell_asset():
+    """
+    Permite a un usuario autenticado vender un activo.
+    Espera un JSON con: {"ticker": "AAPL", "quantity": 5}
+    """
+    data = request.get_json()
+    if not data or 'ticker' not in data or 'quantity' not in data:
+        return jsonify({"error": "Ticker and quantity are required"}), 400
+
+    ticker = data['ticker']
+    try:
+        quantity_to_sell = Decimal(data['quantity'])
+        if quantity_to_sell <= 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid quantity"}), 400
+
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    holding = Holding.query.filter_by(portfolio_id=user.portfolio.id, ticker_symbol=ticker).first()
+
+    if not holding or holding.quantity < quantity_to_sell:
+        return jsonify({"error": "You do not own enough of this asset to sell"}), 400
+
+    price = get_market_price(ticker)
+    total_sale_value = price * quantity_to_sell
+
+    user.portfolio.cash_balance += total_sale_value
+    holding.quantity -= quantity_to_sell
+
+    if holding.quantity == 0:
+        db.session.delete(holding)
+
+    # Registrar la transacción
+    new_transaction = Transaction(
+        portfolio_id=user.portfolio.id,
+        ticker_symbol=ticker,
+        type=TransactionType.SELL,
+        quantity=quantity_to_sell,
+        price_per_share=price
+    )
+    db.session.add(new_transaction)
+
+    db.session.commit()
+
+    return jsonify({"message": f"Successfully sold {quantity_to_sell} of {ticker}", "new_cash_balance": str(user.portfolio.cash_balance)}), 200
