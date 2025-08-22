@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from .. import db # Importamos la instancia db desde __init__.py
+from . import db # Importamos la instancia db desde __init__.py
 
 class TransactionType(enum.Enum):
     BUY = 'BUY'
