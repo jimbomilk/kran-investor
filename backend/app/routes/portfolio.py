@@ -1,12 +1,34 @@
-from flask import jsonify, Blueprint
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models import User
 from app.models import User, Holding, Transaction, TransactionType
 from app import db
 from decimal import Decimal
+from marshmallow import ValidationError
+from app.schemas import TradeSchema
 
 portfolio_bp = Blueprint('portfolio', __name__, url_prefix='/api/portfolio')
+trade_schema = TradeSchema()
+
+@portfolio_bp.route('', methods=['GET'])
+@jwt_required()
+def get_portfolio():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user or not user.portfolio:
+        return jsonify({"error": "Portfolio not found"}), 404
+
+    holdings_data = [{
+        "ticker": h.ticker_symbol,
+        "quantity": str(h.quantity),
+        "average_purchase_price": str(h.average_purchase_price)
+    } for h in user.portfolio.holdings]
+
+    return jsonify({
+        "cash_balance": str(user.portfolio.cash_balance),
+        "holdings": holdings_data
+    }), 200
+
 # --- Placeholder para el servicio de mercado ---
 # TODO: Reemplazar esto con una llamada real a una API de mercado (ej. Financial Modeling Prep)
 def get_market_price(ticker):
@@ -33,18 +55,13 @@ def buy_asset():
     Permite a un usuario autenticado comprar un activo.
     Espera un JSON con: {"ticker": "AAPL", "quantity": 10}
     """
-    data = request.get_json()
-    if not data or 'ticker' not in data or 'quantity' not in data:
-        return jsonify({"error": "Ticker and quantity are required"}), 400
+    try:
+        data = trade_schema.load(request.get_json())
+    except ValidationError as err:
+        return jsonify(err.messages), 422
 
     ticker = data['ticker']
-    try:
-        quantity = Decimal(data['quantity'])
-        if quantity <= 0:
-            raise ValueError
-    except (ValueError, TypeError):
-        return jsonify({"error": "Invalid quantity"}), 400
-
+    quantity = data['quantity']
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
 
@@ -102,18 +119,13 @@ def sell_asset():
     Permite a un usuario autenticado vender un activo.
     Espera un JSON con: {"ticker": "AAPL", "quantity": 5}
     """
-    data = request.get_json()
-    if not data or 'ticker' not in data or 'quantity' not in data:
-        return jsonify({"error": "Ticker and quantity are required"}), 400
+    try:
+        data = trade_schema.load(request.get_json())
+    except ValidationError as err:
+        return jsonify(err.messages), 422
 
     ticker = data['ticker']
-    try:
-        quantity_to_sell = Decimal(data['quantity'])
-        if quantity_to_sell <= 0:
-            raise ValueError
-    except (ValueError, TypeError):
-        return jsonify({"error": "Invalid quantity"}), 400
-
+    quantity_to_sell = data['quantity']
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
 
