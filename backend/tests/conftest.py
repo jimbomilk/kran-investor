@@ -1,16 +1,12 @@
 import pytest
 from app import create_app, db
+from app.config import TestConfig # Importar la nueva configuración de test
 
 @pytest.fixture(scope='module')
 def test_app():
-    """Crea una instancia de la aplicación Flask para pruebas."""
-    app = create_app()
-    app.config.update({
-        "TESTING": True,
-        # Usar una base de datos SQLite en memoria para las pruebas
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "SECRET_KEY": "my-test-secret-key"
-    })
+    """Crea y configura una instancia de la aplicación Flask para pruebas."""
+    # Usamos la configuración de TestConfig para crear la app
+    app = create_app(config_class=TestConfig)
 
     with app.app_context():
         db.create_all()  # Crea todas las tablas en la BD en memoria
