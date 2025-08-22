@@ -68,7 +68,7 @@ def buy_asset():
     try:
         price = get_market_price(ticker)
     except ValueError as e:
-        return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
 
     total_cost = price * quantity
 

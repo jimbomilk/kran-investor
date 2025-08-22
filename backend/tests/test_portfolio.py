@@ -71,9 +71,8 @@ def test_buy_asset_invalid_ticker(client, test_user):
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    # El servicio de mercado real devuelve 400 si el ticker no se encuentra o hay un error.
     assert response.status_code == 400
-    assert "No se encontraron datos" in data['error']
+    assert "not found" in data['error']
 
 
 # --- Tests para el endpoint /sell ---
