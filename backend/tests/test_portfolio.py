@@ -71,7 +71,8 @@ def test_buy_asset_invalid_ticker(client, test_user):
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 400
+    assert response.status_code == 400 
+    #
     assert "not found" in data['error']
 
 
