@@ -24,8 +24,9 @@ def create_app(config_class=Config):
 
     # Importamos y registramos los Blueprints
     from .routes.auth import auth_bp
-    app.register_blueprint(auth_bp)
+    from .routes.portfolio import portfolio_bp
 
-    # (Aquí registraremos otros blueprints como el de la cartera, etc.)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(portfolio_bp)
 
     return app
