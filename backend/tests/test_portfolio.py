@@ -84,7 +84,12 @@ def test_sell_asset_success(client, test_user):
     THEN se debe vender el activo, añadir el dinero y registrar la transacción.
     """
     # Setup: Darle al usuario un activo para vender
-    holding = Holding(portfolio_id=test_user.portfolio.id, ticker_symbol="TSLA", quantity=Decimal("20"))
+    holding = Holding(
+        portfolio_id=test_user.portfolio.id,
+        ticker_symbol="TSLA",
+        quantity=Decimal("20"),
+        average_purchase_price=Decimal("240.00"),
+    )
     db.session.add(holding)
     db.session.commit()
 
@@ -115,7 +120,12 @@ def test_sell_all_of_asset_success(client, test_user):
     WHEN vende la cantidad total de ese activo.
     THEN el holding debe ser eliminado de la base de datos.
     """
-    holding = Holding(portfolio_id=test_user.portfolio.id, ticker_symbol="TSLA", quantity=Decimal("20"))
+    holding = Holding(
+        portfolio_id=test_user.portfolio.id,
+        ticker_symbol="TSLA",
+        quantity=Decimal("20"),
+        average_purchase_price=Decimal("240.00"),
+    )
     db.session.add(holding)
     db.session.commit()
 
@@ -135,7 +145,12 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     WHEN intenta vender más cantidad de la que posee.
     THEN la API debe devolver un error 400.
     """
-    holding = Holding(portfolio_id=test_user.portfolio.id, ticker_symbol="TSLA", quantity=Decimal("20"))
+    holding = Holding(
+        portfolio_id=test_user.portfolio.id,
+        ticker_symbol="TSLA",
+        quantity=Decimal("20"),
+        average_purchase_price=Decimal("240.00"),
+    )
     db.session.add(holding)
     db.session.commit()
 
