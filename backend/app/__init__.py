@@ -22,6 +22,10 @@ def create_app(config_class=Config):
     bcrypt.init_app(app)
     jwt.init_app(app)
 
-    # Aquí registraremos los Blueprints (rutas) en el futuro
+    # Importamos y registramos los Blueprints
+    from .routes.auth import auth_bp
+    app.register_blueprint(auth_bp)
+
+    # (Aquí registraremos otros blueprints como el de la cartera, etc.)
 
     return app
