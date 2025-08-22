@@ -1,4 +1,5 @@
 from flask import request, jsonify, Blueprint
+from flask_jwt_extended import create_access_token
 from .. import db, bcrypt
 from ..models import User, Portfolio
 
@@ -44,3 +45,29 @@ def register():
     db.session.commit()
 
     return jsonify({"message": "User created successfully"}), 201
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    """
+    Endpoint para iniciar sesión.
+    Espera un JSON con 'email' y 'password'.
+    Devuelve un token de acceso JWT si las credenciales son correctas.
+    """
+    data = request.get_json()
+
+    # 1. Validación de datos de entrada
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({"error": "Email and password are required"}), 400
+
+    # 2. Buscar al usuario por su email
+    user = User.query.filter_by(email=data.get('email')).first()
+
+    # 3. Verificar que el usuario existe y la contraseña es correcta
+    if not user or not bcrypt.check_password_hash(user.password_hash, data.get('password')):
+        return jsonify({"error": "Invalid credentials"}), 401  # 401 Unauthorized
+
+    # 4. Crear el token de acceso JWT
+    access_token = create_access_token(identity=user.id)
+
+    # 5. Devolver el token
+    return jsonify(access_token=access_token), 200
