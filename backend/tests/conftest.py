@@ -2,6 +2,7 @@ import pytest
 from decimal import Decimal
 from app import create_app, db
 from app.models import User
+from werkzeug.security import generate_password_hash
 
 @pytest.fixture(scope='module')
 def test_app():
@@ -35,9 +36,13 @@ def test_user(test_app):
     Esto asegura que cada test comience con un estado limpio.
     """
     with test_app.app_context():
-        # Tu modelo User ya crea un Portfolio automáticamente, ¡genial!
-        user = User(username='testuser', email='test@example.com')
-        user.set_password('password123')
+        # Se genera el hash de la contraseña directamente para evitar
+        # posibles problemas con el método set_password en ciertos entornos.
+        user = User(
+            username='testuser',
+            email='test@example.com',
+            password_hash=generate_password_hash('password123')
+        )
         user.portfolio.cash_balance = Decimal('10000.00')
         db.session.add(user)
         db.session.commit()
