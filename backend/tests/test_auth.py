@@ -1,5 +1,5 @@
 import json
-
+#
 def test_register_success(client):
     """
     GIVEN una aplicación Flask configurada para pruebas
