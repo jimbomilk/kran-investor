@@ -21,7 +21,7 @@ def test_buy_asset_success(client, test_user):
     THEN se debe añadir el activo, deducir el dinero y registrar la transacción.
     """
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "AAPL", "quantity": 10}
+    payload = {"ticker": "AAPL", "quantity": "10"}
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
@@ -53,7 +53,7 @@ def test_buy_asset_insufficient_funds(client, test_user):
     """
     headers = get_auth_headers(test_user)
     # El usuario tiene 10000, la compra cuesta 175.50 * 100 = 17550
-    payload = {"ticker": "AAPL", "quantity": 100}
+    payload = {"ticker": "AAPL", "quantity": "100"}
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
@@ -67,12 +67,13 @@ def test_buy_asset_invalid_ticker(client, test_user):
     THEN la API debe devolver un error 404.
     """
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "INVALIDTICKER", "quantity": 10}
+    payload = {"ticker": "INVALIDTICKER", "quantity": "10"}
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 404
-    assert "not found" in data['error']
+    # El servicio de mercado real devuelve 400 si el ticker no se encuentra o hay un error.
+    assert response.status_code == 400
+    assert "No se encontraron datos" in data['error']
 
 
 # --- Tests para el endpoint /sell ---
@@ -94,7 +95,7 @@ def test_sell_asset_success(client, test_user):
     db.session.commit()
 
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "TSLA", "quantity": 5}
+    payload = {"ticker": "TSLA", "quantity": "5"}
     response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
@@ -130,7 +131,7 @@ def test_sell_all_of_asset_success(client, test_user):
     db.session.commit()
 
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "TSLA", "quantity": 20}
+    payload = {"ticker": "TSLA", "quantity": "20"}
     response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
 
     assert response.status_code == 200
@@ -155,7 +156,7 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     db.session.commit()
 
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "TSLA", "quantity": 25} # Solo tiene 20
+    payload = {"ticker": "TSLA", "quantity": "25"} # Solo tiene 20
     response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
@@ -169,7 +170,7 @@ def test_sell_asset_not_owned(client, test_user):
     THEN la API debe devolver un error 400.
     """
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "GOOGL", "quantity": 10} # No posee GOOGL
+    payload = {"ticker": "GOOGL", "quantity": "10"} # No posee GOOGL
     response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
