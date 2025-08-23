@@ -9,3 +9,4 @@ gunicorn
 pytest
 marshmallow
 flask-marshmallow 
+requests

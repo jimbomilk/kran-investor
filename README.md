@@ -35,20 +35,62 @@ El objetivo es crear un entorno adictivo y competitivo donde los usuarios no sol
 
 🔗 Economía Web3 con Kran ($KRN): El corazón del proyecto. Los usuarios ganan $KRN por su desempeño, no con dinero real. Estos tokens les otorgan propiedad real sobre sus recompensas y pueden ser utilizados en un mercado interno para adquirir NFTs (skins, badges) y acceder a funcionalidades premium.
 
-3. Arquitectura del Sistema
-El sistema se compone de una arquitectura de aplicación descentralizada (DApp) moderna:
+3. Arquitectura del Sistema y Mapa de Contexto
+El sistema se compone de una arquitectura de aplicación descentralizada (DApp) moderna. El siguiente diagrama y descripción detallan los componentes principales y cómo se interrelacionan para crear la experiencia "Learn-to-Earn".
 
-  [ 👤 Usuario (Navegador) ]
-           |
-           V  (Interactúa con la UI, conecta MetaMask)
-  [ 💻 Frontend (React, Ethers.js) ] --- (Peticiones API REST) ---> [ 🧠 Backend (Python) ]
-           |                                                               |           |
- (Firma y envía transacciones)                               (Envía transacciones, ej. recompensas) | (Consultas)
-           |                                                               |           V
-           '---------------------> [ 🔗 Blockchain (Polygon) ] <---------'   [ 🗃️ Base de Datos (PostgreSQL) ]
-                                     - Smart Contract $KRN (ERC20)             (Datos off-chain: perfiles,
-                                     - Smart Contract Mercado (ERC721)          transacciones simuladas, etc.)
-                                     - Smart Contract Staking
+```
++---------------------------------+      +---------------------------------+
+|      👤 Usuario (Navegador)      |      |      📈 API Externa (FMP)       |
+| - Conecta Wallet (MetaMask)     |      | - Datos de mercado en tiempo real|
+| - Realiza trades virtuales      |      | - Búsqueda de activos           |
++----------------|----------------+      +----------------^----------------+
+                 |                                         | (Petición de datos)
+      (Interactúa con la UI)                               |
+                 |                                         |
+                 v                                         |
++----------------+----------------+      +-----------------+-----------------+
+|   💻 Frontend (React/Ethers.js) |----->|     🧠 Backend (Python/Flask)     |
+| - Interfaz de Usuario (UI)      |      | - API REST para el cliente        |
+| - Gestión de estado (JWT)       |      | - Lógica de negocio (trades)      |
+| - Llama a la API del Backend    |      | - Autenticación y perfiles        |
+| - Firma transacciones Web3      |      | - Conexión con BD y API externa   |
++----------------|----------------+      +-----------------+-----------------+
+                 |                                         |                 |
+(Transacciones firmadas:          (Consultas y            (Transacciones:
+ comprar NFT, Staking)             mutaciones de datos)      distribuir recompensas)
+                 |                                         |                 |
+                 v                                         v                 v
++----------------+----------------+      +-----------------+-----------------+
+|     🔗 Blockchain (Polygon)     |      |   🗃️ Base de Datos (PostgreSQL)   |
+| - Contrato $KRN (ERC20)         |<---->| - Perfiles de usuario             |
+| - Contrato Mercado (ERC721)     |      | - Carteras virtuales (dinero/activos)|
+| - Contrato Staking              |      | - Historial de transacciones      |
++---------------------------------+      +-----------------------------------+
+```
+
+**Descripción de Componentes y Flujos:**
+
+*   **Usuario (User):** Es el actor principal. Interactúa exclusivamente con el Frontend a través de su navegador, donde conecta su billetera digital (ej. MetaMask) para gestionar sus activos Web3.
+
+*   **Frontend (React & Ethers.js):** Es la puerta de entrada a la aplicación.
+    *   **Relación con el Usuario:** Provee la interfaz gráfica para todas las operaciones: visualizar el dashboard, buscar activos, y ejecutar órdenes de compra/venta.
+    *   **Relación con el Backend:** Se comunica vía una API REST para registrar/autenticar usuarios, obtener el estado de la cartera, y enviar operaciones de trading simuladas.
+    *   **Relación con la Blockchain:** Utiliza `Ethers.js` para que el usuario pueda firmar y enviar transacciones directamente a los smart contracts (ej. comprar un NFT en el mercado o hacer staking de $KRN).
+
+*   **Backend (Python, Flask, SQLAlchemy, Web3.py):** Es el cerebro de la lógica de negocio y el orquestador de datos.
+    *   **Relación con el Frontend:** Expone una API REST segura (usando JWT) que el frontend consume.
+    *   **Relación con la Base de Datos:** Utiliza `SQLAlchemy` para persistir y consultar toda la información *off-chain*, como los perfiles de usuario, el contenido de sus carteras virtuales, y el historial de todas las operaciones simuladas.
+    *   **Relación con la API Externa:** Se conecta al servicio de *Financial Modeling Prep (FMP)* para obtener cotizaciones de activos en tiempo real, asegurando que las operaciones simuladas se basen en datos de mercado reales.
+    *   **Relación con la Blockchain:** Utiliza `Web3.py` para interactuar con los smart contracts desde el lado del servidor. Su principal función es la de actuar como un "distribuidor" o "faucet", enviando recompensas en tokens $KRN a los usuarios cuando cumplen objetivos (ej. ganar una liga).
+
+*   **Base de Datos (PostgreSQL):** Es el almacén de datos centralizado y *off-chain*. Guarda toda la información que no necesita estar en la blockchain por razones de coste y velocidad, como los datos de perfil, el estado del juego (misiones, XP) y el registro detallado de las operaciones de trading virtuales.
+
+*   **Blockchain (Polygon):** Es la capa descentralizada que aporta la propiedad real de los activos digitales.
+    *   **Relación con Frontend y Backend:** Ambos pueden interactuar con los contratos. El frontend se enfoca en operaciones iniciadas por el usuario (gastar tokens), mientras que el backend se enfoca en la distribución de recompensas (ganar tokens).
+    *   **Componentes:** Contiene la lógica inmutable para el token $KRN (ERC-20), los NFTs del mercado (ERC-721) y las reglas de staking.
+
+*   **API Externa (Financial Modeling Prep):** Es el proveedor de datos de mercado. El Backend depende de este servicio para dar realismo al simulador.
+
 4. El Ecosistema del Token: Kran ($KRN)
 Kran es el token de utilidad estándar ERC-20 del ecosistema IVP.
 
@@ -148,8 +190,8 @@ Backend (API REST):
     - **[✓] `POST /portfolio/buy`**: Simular la compra de un activo (validando saldo virtual). *(Nota: Usa precios simulados)*.
     - **[✓] `POST /portfolio/sell`**: Simular la venta de un activo (validando tenencia). *(Nota: Usa precios simulados)*.
   - **Mercado:**
-    - **[ ] `GET /market/quote/{ticker}`**: Endpoint para obtener la cotización de un activo específico desde la API externa.
-    - **[ ] `GET /market/search/{query}`**: Endpoint para buscar activos.
+    - **[✓] `GET /api/market/quote/{ticker}`**: Endpoint para obtener la cotización de un activo específico desde la API externa.
+    - **[✓] `GET /api/market/search/{query}`**: Endpoint para buscar activos.
   - **[ ] Trabajo Programado (Cron Job):** Implementar un script para actualizar periódicamente el valor de las carteras de todos los usuarios.
 
 Frontend:
