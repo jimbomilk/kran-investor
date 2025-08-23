@@ -49,7 +49,7 @@ def test_buy_asset_insufficient_funds(client, test_user):
     """
     GIVEN un usuario autenticado.
     WHEN intenta comprar un activo por un valor mayor a su saldo.
-    THEN la API debe devolver un error 400.
+    THEN la API debe devolver un error 422.
     """
     headers = get_auth_headers(test_user)
     # El usuario tiene 10000, la compra cuesta 175.50 * 100 = 17550
@@ -57,7 +57,7 @@ def test_buy_asset_insufficient_funds(client, test_user):
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert data['error'] == "Insufficient funds"
 
 def test_buy_asset_invalid_ticker(client, test_user):
@@ -71,7 +71,7 @@ def test_buy_asset_invalid_ticker(client, test_user):
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 400 
+    assert response.status_code == 422 
     #
     assert "not found" in data['error']
 
@@ -144,7 +144,7 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     """
     GIVEN un usuario autenticado que posee un activo.
     WHEN intenta vender más cantidad de la que posee.
-    THEN la API debe devolver un error 400.
+    THEN la API debe devolver un error 422.
     """
     holding = Holding(
         portfolio_id=test_user.portfolio.id,
@@ -160,19 +160,19 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert data['error'] == "You do not own enough of this asset to sell"
 
 def test_sell_asset_not_owned(client, test_user):
     """
     GIVEN un usuario autenticado.
     WHEN intenta vender un activo que no posee.
-    THEN la API debe devolver un error 400.
+    THEN la API debe devolver un error 422.
     """
     headers = get_auth_headers(test_user)
     payload = {"ticker": "GOOGL", "quantity": "10"} # No posee GOOGL
     response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert data['error'] == "You do not own enough of this asset to sell"
