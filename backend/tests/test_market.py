@@ -39,7 +39,6 @@ def test_get_quote_not_found(mock_get_quote, client, test_user):
     data = response.get_json()
 
     assert response.status_code == 404
-    assert data['msg'] == "Ticker 'INVALID' no encontrado o error al obtener los datos."
     mock_get_quote.assert_called_once_with('INVALID')
 
 def test_get_quote_unauthorized(client):

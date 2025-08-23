@@ -95,6 +95,7 @@ def test_sell_asset_success(mock_get_quote, client, test_user):
         portfolio_id=test_user.portfolio.id,
         ticker_symbol="TSLA",
         quantity=Decimal("20"),
+        average_purchase_price=Decimal("250.00"),
     )
     db.session.add(asset)
     db.session.commit()
@@ -127,6 +128,7 @@ def test_sell_all_of_asset_success(mock_get_quote, client, test_user):
         portfolio_id=test_user.portfolio.id,
         ticker_symbol="TSLA",
         quantity=Decimal("20"),
+        average_purchase_price=Decimal("250.00"),
     )
     db.session.add(asset)
     db.session.commit()
@@ -156,6 +158,7 @@ def test_sell_asset_not_enough_quantity(mock_get_quote, client, test_user):
         portfolio_id=test_user.portfolio.id,
         ticker_symbol="TSLA",
         quantity=Decimal("20"),
+        average_purchase_price=Decimal("250.00"),
     )
     db.session.add(asset)
     db.session.commit()
@@ -200,6 +203,7 @@ def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
         portfolio_id=test_user.portfolio.id,
         ticker_symbol="INVALIDTICKER",
         quantity=Decimal("10"),
+        average_purchase_price=Decimal("100.00"),
     )
     db.session.add(asset)
     db.session.commit()
