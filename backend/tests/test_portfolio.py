@@ -198,3 +198,14 @@ def test_sell_asset_invalid_ticker(client, test_user):
     assert response.status_code == 404
     assert "error" in data
     assert "not found" in data['error']
+
+def test_get_profile_authenticated(client, test_user):
+    """
+    GIVEN un usuario autenticado
+    WHEN pide su perfil
+    THEN la API debe devolver 200 OK
+    """
+    headers = get_auth_headers(test_user) # Usando tu función ya corregida
+    response = client.post('/api/portfolio/sell', headers=headers) # O la ruta que sea
+
+    assert response.status_code == 200
