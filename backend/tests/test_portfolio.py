@@ -96,12 +96,12 @@ def test_sell_asset_success(client, test_user):
     db.session.commit()
 
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "TSLA", "quantity": "5"}
-    response = client.post('/api/portfolio/sell', headers=headers, json=payload)
+    payload = {"ticker": "TSLA", "quantity": 5}
+    response = client.post('/api/portfolio/sell', headers=headers, json=payload, content_type='application/json')
     data = response.get_json()
 
     assert response.status_code == 200
-    assert data['message'] == "Successfully sold 5 of TSLA"
+    assert data['error'] == "Successfully sold 5 of TSLA"
 
     # Verificar el estado de la base de datos
     db.session.refresh(test_user)
@@ -159,7 +159,7 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     db.session.commit()
 
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "TSLA", "quantity": "25"} # Solo tiene 20
+    payload = {"ticker": "TSLA", "quantity": 25} # Solo tiene 20
     response = client.post('/api/portfolio/sell', headers=headers, json=payload)
     data = response.get_json()
 
@@ -175,7 +175,7 @@ def test_sell_asset_not_owned(client, test_user):
     THEN la API debe devolver un error 400 y el payload.
     """
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "GOOGL", "quantity": "10"} # No posee GOOGL
+    payload = {"ticker": "GOOGL", "quantity": 10} # No posee GOOGL
     response = client.post('/api/portfolio/sell', headers=headers, json=payload)
     data = response.get_json()
 
@@ -191,7 +191,7 @@ def test_sell_asset_invalid_ticker(client, test_user):
     THEN la API debe devolver un error 404.
     """
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "INVALIDTICKER", "quantity": "10"}
+    payload = {"ticker": "INVALIDTICKER", "quantity": 10}
     response = client.post('/api/portfolio/sell', headers=headers, json=payload)
     data = response.get_json()
 
