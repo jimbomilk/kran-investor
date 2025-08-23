@@ -68,7 +68,8 @@ def buy_asset():
     try:
         price = get_market_price(ticker)
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        # Usamos 404 Not Found, que es más específico para un recurso que no existe.
+        return jsonify({"error": f"Ticker '{ticker}' not found"}), 404
 
     total_cost = price * quantity
 
@@ -129,12 +130,21 @@ def sell_asset():
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
 
+    # Primero, validamos que el ticker exista para dar un error 404 si no se encuentra.
+    try:
+        price = get_market_price(ticker)
+    except ValueError:
+        return jsonify({"error": f"Ticker '{ticker}' not found"}), 404
+
     holding = Holding.query.filter_by(portfolio_id=user.portfolio.id, ticker_symbol=ticker).first()
 
-    if not holding or holding.quantity < quantity_to_sell:
+    # Ahora, verificamos si el usuario posee el activo y en la cantidad suficiente con mensajes de error específicos.
+    if not holding:
+        return jsonify({"error": "You do not own this asset"}), 400
+
+    if holding.quantity < quantity_to_sell:
         return jsonify({"error": "You do not own enough of this asset to sell"}), 400
 
-    price = get_market_price(ticker)
     total_sale_value = price * quantity_to_sell
 
     user.portfolio.cash_balance += total_sale_value

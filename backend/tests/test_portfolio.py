@@ -49,7 +49,7 @@ def test_buy_asset_insufficient_funds(client, test_user):
     """
     GIVEN un usuario autenticado.
     WHEN intenta comprar un activo por un valor mayor a su saldo.
-    THEN la API debe devolver un error 422.
+    THEN la API debe devolver un error 400.
     """
     headers = get_auth_headers(test_user)
     # El usuario tiene 10000, la compra cuesta 175.50 * 100 = 17550
@@ -57,8 +57,8 @@ def test_buy_asset_insufficient_funds(client, test_user):
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 422
-    assert data['message'] == "Insufficient funds"
+    assert response.status_code == 400
+    assert data['error'] == "Insufficient funds"
 
 def test_buy_asset_invalid_ticker(client, test_user):
     """
@@ -71,9 +71,9 @@ def test_buy_asset_invalid_ticker(client, test_user):
     response = client.post('/api/portfolio/buy', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 422 
-    #
-    assert "not found" in data['message']
+    assert response.status_code == 404
+    assert "error" in data
+    assert "not found" in data['error']
 
 
 # --- Tests para el endpoint /sell ---
@@ -144,7 +144,7 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     """
     GIVEN un usuario autenticado que posee un activo.
     WHEN intenta vender más cantidad de la que posee.
-    THEN la API debe devolver un error 422.
+    THEN la API debe devolver un error 400.
     """
     holding = Holding(
         portfolio_id=test_user.portfolio.id,
@@ -160,21 +160,36 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 422
-    # El KeyError indica que la clave 'error' no está en la respuesta.
-    # Para este caso, la API devuelve una clave 'message' con un texto más específico.
-    assert data['message'] == "You do not own this asset"
+    assert response.status_code == 400
+    assert "error" in data
+    assert data['error'] == "You do not own enough of this asset to sell"
 
 def test_sell_asset_not_owned(client, test_user):
     """
     GIVEN un usuario autenticado.
     WHEN intenta vender un activo que no posee.
-    THEN la API debe devolver un error 422.
+    THEN la API debe devolver un error 400.
     """
     headers = get_auth_headers(test_user)
     payload = {"ticker": "GOOGL", "quantity": "10"} # No posee GOOGL
     response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
     data = response.get_json()
 
-    assert response.status_code == 422
-    assert data['message'] == "You do not own enough of this asset to sell"
+    assert response.status_code == 400
+    assert "error" in data
+    assert data['error'] == "You do not own this asset"
+
+def test_sell_asset_invalid_ticker(client, test_user):
+    """
+    GIVEN un usuario autenticado.
+    WHEN intenta vender un activo con un ticker inválido.
+    THEN la API debe devolver un error 404.
+    """
+    headers = get_auth_headers(test_user)
+    payload = {"ticker": "INVALIDTICKER", "quantity": "10"}
+    response = client.post('/api/portfolio/sell', headers=headers, data=json.dumps(payload), content_type='application/json')
+    data = response.get_json()
+
+    assert response.status_code == 404
+    assert "error" in data
+    assert "not found" in data['error']
