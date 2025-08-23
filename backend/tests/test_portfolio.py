@@ -11,7 +11,7 @@ def get_auth_headers(user):
     """Genera cabeceras de autenticación para un usuario."""
     # In the tests, the user object is not the same as the one from the DB,
     # so we need to get the ID from the object passed.
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
     return {'Authorization': f'Bearer {access_token}'}
 
 
