@@ -49,7 +49,7 @@ def test_buy_asset_insufficient_funds(client, test_user):
     """
     GIVEN un usuario autenticado.
     WHEN intenta comprar un activo por un valor mayor a su saldo.
-    THEN la API debe devolver un error 400.
+    THEN la API debe devolver un error 400 y el payload.
     """
     headers = get_auth_headers(test_user)
     # El usuario tiene 10000, la compra cuesta 175.50 * 100 = 17550
@@ -58,6 +58,7 @@ def test_buy_asset_insufficient_funds(client, test_user):
     data = response.get_json()
 
     assert response.status_code == 400
+    assert "received_payload" in data
     assert data['error'] == "Insufficient funds"
 
 def test_buy_asset_invalid_ticker(client, test_user):
@@ -144,7 +145,7 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     """
     GIVEN un usuario autenticado que posee un activo.
     WHEN intenta vender más cantidad de la que posee.
-    THEN la API debe devolver un error 400.
+    THEN la API debe devolver un error 400 y el payload.
     """
     holding = Holding(
         portfolio_id=test_user.portfolio.id,
@@ -161,6 +162,7 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     data = response.get_json()
 
     assert response.status_code == 400
+    assert "received_payload" in data
     assert "error" in data
     assert data['error'] == "You do not own enough of this asset to sell"
 
@@ -168,7 +170,7 @@ def test_sell_asset_not_owned(client, test_user):
     """
     GIVEN un usuario autenticado.
     WHEN intenta vender un activo que no posee.
-    THEN la API debe devolver un error 400.
+    THEN la API debe devolver un error 400 y el payload.
     """
     headers = get_auth_headers(test_user)
     payload = {"ticker": "GOOGL", "quantity": "10"} # No posee GOOGL
@@ -176,6 +178,7 @@ def test_sell_asset_not_owned(client, test_user):
     data = response.get_json()
 
     assert response.status_code == 400
+    assert "received_payload" in data
     assert "error" in data
     assert data['error'] == "You do not own this asset"
 
