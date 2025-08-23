@@ -44,7 +44,7 @@ def test_buy_asset_success(mock_get_quote, client, test_user):
 
     transaction = Transaction.query.filter_by(portfolio_id=test_user.portfolio.id, ticker_symbol="AAPL").first()
     assert transaction is not None
-    assert transaction.type == 'buy'
+    assert transaction.type == 'BUY'
     assert transaction.quantity == 10
     assert transaction.price == Decimal("150.00")
 
