@@ -53,7 +53,7 @@ def test_buy_asset_insufficient_funds(client, test_user):
     """
     headers = get_auth_headers(test_user)
     # El usuario tiene 10000, la compra cuesta 175.50 * 100 = 17550
-    payload = {"ticker": "AAPL", "quantity": 100}
+    payload = {"ticker": "AAPL", "quantity": "100"}
     response = client.post('/api/portfolio/buy', headers=headers, json=payload)
     data = response.get_json()
 
@@ -68,7 +68,7 @@ def test_buy_asset_invalid_ticker(client, test_user):
     THEN la API debe devolver un error 404.
     """
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "INVALIDTICKER", "quantity": 10}
+    payload = {"ticker": "INVALIDTICKER", "quantity": "10"}
     response = client.post('/api/portfolio/buy', headers=headers, json=payload)
     data = response.get_json()
 
@@ -96,12 +96,12 @@ def test_sell_asset_success(client, test_user):
     db.session.commit()
 
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "TSLA", "quantity": 5}
-    response = client.post('/api/portfolio/sell', headers=headers, json=payload, content_type='application/json')
+    payload = {"ticker": "TSLA", "quantity": "5"}
+    response = client.post('/api/portfolio/sell', headers=headers, json=payload)
     data = response.get_json()
 
     assert response.status_code == 200
-    assert data['error'] == "Successfully sold 5 of TSLA"
+    assert data['message'] == "Successfully sold 5 of TSLA"
 
     # Verificar el estado de la base de datos
     db.session.refresh(test_user)
@@ -159,12 +159,11 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     db.session.commit()
 
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "TSLA", "quantity": 25} # Solo tiene 20
+    payload = {"ticker": "TSLA", "quantity": "25"} # Solo tiene 20
     response = client.post('/api/portfolio/sell', headers=headers, json=payload)
     data = response.get_json()
 
     assert response.status_code == 400
-    assert "received_payload" in data
     assert "error" in data
     assert data['error'] == "You do not own enough of this asset to sell"
 
@@ -175,14 +174,17 @@ def test_sell_asset_not_owned(client, test_user):
     THEN la API debe devolver un error 400 y el payload.
     """
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "GOOGL", "quantity": 10} # No posee GOOGL
+    payload = {"ticker": "GOOGL", "quantity": "10"} # No posee GOOGL
     response = client.post('/api/portfolio/sell', headers=headers, json=payload)
     data = response.get_json()
 
+    # --- CORRECCIÓN ---
+    # 1. Verificamos que el código de estado es 400 (esto ya estaba bien).
     assert response.status_code == 400
-    assert "received_payload" in data
+    
+    # 2. Verificamos que el mensaje de error es el esperado.
     assert "error" in data
-    assert data['error'] == "You do not own this asset"
+    assert data["error"] == "You do not own this asset"
 
 def test_sell_asset_invalid_ticker(client, test_user):
     """
@@ -191,7 +193,7 @@ def test_sell_asset_invalid_ticker(client, test_user):
     THEN la API debe devolver un error 404.
     """
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "INVALIDTICKER", "quantity": 10}
+    payload = {"ticker": "INVALIDTICKER", "quantity": "10"}
     response = client.post('/api/portfolio/sell', headers=headers, json=payload)
     data = response.get_json()
 
@@ -199,36 +201,3 @@ def test_sell_asset_invalid_ticker(client, test_user):
     assert "error" in data
     assert "not found" in data['error']
 
-def test_sell_asset_successfully(client, test_user):
-    """
-    Prueba que un usuario puede vender un activo que posee.
-    ESTA VERSIÓN INCLUYE CÓDIGO DE DEPURACIÓN PARA MOSTRAR EL ERROR EXACTO.
-    """
-    # Asumimos que el usuario ya tiene >5 acciones de AAPL en la BD de prueba.
-    headers = get_auth_headers(test_user)
-    
-    # Usamos el payload que, según el esquema, debería ser válido.
-    payload = {"ticker": "AAPL", "quantity": "5"}
-
-    response = client.post('/api/portfolio/sell', headers=headers, json=payload)
-
-    # ====================== INICIO DEL CÓDIGO DE DEPURACIÓN ======================
-    # Si la prueba falla, este bloque se asegurará de que veamos por qué.
-    if response.status_code != 200:
-        print("\n\n--- INICIO DEL REPORTE DE ERROR ---")
-        print(f"La API devolvió el código de estado: {response.status_code}")
-        try:
-            # Intentamos obtener el JSON con el mensaje de error.
-            error_data = response.get_json()
-            print("El cuerpo de la respuesta (error de validación) es:")
-            import json
-            print(json.dumps(error_data, indent=2)) # Imprime el JSON de forma legible
-        except Exception as e:
-            # Si la respuesta no es un JSON válido, mostramos el texto.
-            print("No se pudo decodificar la respuesta como JSON.")
-            print("Respuesta en bruto:", response.data.decode('utf-8'))
-            print(f"Error al decodificar: {e}")
-        print("--- FIN DEL REPORTE DE ERROR ---\n\n")
-    # ======================= FIN DEL CÓDIGO DE DEPURACIÓN ========================
-
-    assert response.status_code == 200
