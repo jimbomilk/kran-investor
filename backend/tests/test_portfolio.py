@@ -42,7 +42,7 @@ def test_buy_asset_success(mock_get_quote, client, test_user):
     assert asset is not None
     assert asset.quantity == 10
 
-    transaction = Transaction.query.filter_by(portfolio_id=test_user.portfolio.id, ticker="AAPL").first()
+    transaction = Transaction.query.filter_by(portfolio_id=test_user.portfolio.id, ticker_symbol="AAPL").first()
     assert transaction is not None
     assert transaction.type == 'buy'
     assert transaction.quantity == 10
