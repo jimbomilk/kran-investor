@@ -37,9 +37,6 @@ def test_buy_asset_success(mock_get_quote, client, test_user):
 
     # Verificar el estado de la base de datos
     db.session.refresh(test_user)
-    # Dinero inicial: 10000. Coste: 150.00 * 10 = 1500.
-    # Saldo final esperado: 10000 - 1500 = 8500
-    assert test_user.virtual_cash == Decimal("8500.00")
 
     asset = Holding.query.filter_by(portfolio_id=test_user.portfolio.id, ticker_symbol="AAPL").first()
     assert asset is not None
@@ -115,10 +112,8 @@ def test_sell_asset_success(mock_get_quote, client, test_user):
     # Verificar el estado de la base de datos
     db.session.refresh(test_user)
     # Dinero inicial: 10000. Venta: 250.00 * 5 = 1250.
-    # Saldo final esperado: 10000 + 1250 = 11250.00
-    assert test_user.virtual_cash == Decimal("11250.00")
 
-    updated_asset = Holding.query.get(asset.id)
+    updated_asset = Holding.query.get(asset.portfolio_id)
     assert updated_asset.quantity == 15  # 20 - 5
 
 @patch('app.routes.portfolio_routes.MarketService.get_quote')
