@@ -97,7 +97,7 @@ def test_sell_asset_success(mock_get_quote, client, test_user):
     """
     # Setup: Darle al usuario un activo para vender
     asset = Holding(
-        user_id=test_user.id,
+        portfolio_id=test_user.portfolio.id,
         ticker="TSLA",
         quantity=Decimal("20"),
     )
@@ -132,7 +132,7 @@ def test_sell_all_of_asset_success(mock_get_quote, client, test_user):
     THEN el holding debe ser eliminado de la base de datos.
     """
     asset = Holding(
-        user_id=test_user.id,
+        portfolio_id=test_user.portfolio.id,
         ticker="TSLA",
         quantity=Decimal("20"),
     )
@@ -161,7 +161,7 @@ def test_sell_asset_not_enough_quantity(mock_get_quote, client, test_user):
     THEN la API debe devolver un error 400.
     """
     asset = Holding(
-        user_id=test_user.id,
+        portfolio_id=test_user.portfolio.id,
         ticker="TSLA",
         quantity=Decimal("20"),
     )
@@ -203,9 +203,9 @@ def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
     WHEN intenta vender ese activo.
     THEN la API debe devolver un error 404 porque no puede obtener la cotización.
     """
-    # Setup: Darle al usuario un activo con un ticker que el servicio no encontrará nunca
+    # Setup: Darle al usuario un activo con un ticker que el servicio no encontrará
     asset = Holding(
-        user_id=test_user.id,
+        portfolio_id=test_user.portfolio.id,
         ticker="INVALIDTICKER",
         quantity=Decimal("10"),
     )
