@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token
 # --- Helper ---
 def get_auth_headers(user):
     """Genera cabeceras de autenticación para un usuario."""
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
     return {'Authorization': f'Bearer {access_token}'}
 
 # --- Tests para Market Routes ---
