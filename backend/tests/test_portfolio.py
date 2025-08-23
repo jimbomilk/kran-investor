@@ -41,7 +41,7 @@ def test_buy_asset_success(mock_get_quote, client, test_user):
     # Saldo final esperado: 10000 - 1500 = 8500
     assert test_user.virtual_cash == Decimal("8500.00")
 
-    asset = Holding.query.filter_by(user_id=test_user.id, ticker="AAPL").first()
+    asset = Holding.query.filter_by(portfolio_id=test_user.portfolio.id, ticker_symbol="AAPL").first()
     assert asset is not None
     assert asset.quantity == 10
 
@@ -98,7 +98,7 @@ def test_sell_asset_success(mock_get_quote, client, test_user):
     # Setup: Darle al usuario un activo para vender
     asset = Holding(
         portfolio_id=test_user.portfolio.id,
-        ticker="TSLA",
+        ticker_symbol="TSLA",
         quantity=Decimal("20"),
     )
     db.session.add(asset)
@@ -133,7 +133,7 @@ def test_sell_all_of_asset_success(mock_get_quote, client, test_user):
     """
     asset = Holding(
         portfolio_id=test_user.portfolio.id,
-        ticker="TSLA",
+        ticker_symbol="TSLA",
         quantity=Decimal("20"),
     )
     db.session.add(asset)
@@ -150,7 +150,7 @@ def test_sell_all_of_asset_success(mock_get_quote, client, test_user):
     assert data['msg'] == "Venta de 20 acciones de TSLA a $250.00 realizada con éxito"
 
     # Verificar que el holding fue eliminado
-    deleted_asset = Holding.query.filter_by(user_id=test_user.id, ticker="TSLA").first()
+    deleted_asset = Holding.query.filter_by(portfolio_id=test_user.portfolio.id, ticker="TSLA").first()
     assert deleted_asset is None
 
 @patch('app.routes.portfolio_routes.MarketService.get_quote')
@@ -162,7 +162,7 @@ def test_sell_asset_not_enough_quantity(mock_get_quote, client, test_user):
     """
     asset = Holding(
         portfolio_id=test_user.portfolio.id,
-        ticker="TSLA",
+        ticker_symbol="TSLA",
         quantity=Decimal("20"),
     )
     db.session.add(asset)
@@ -206,7 +206,7 @@ def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
     # Setup: Darle al usuario un activo con un ticker que el servicio no encontrará
     asset = Holding(
         portfolio_id=test_user.portfolio.id,
-        ticker="INVALIDTICKER",
+        ticker_symbol="INVALIDTICKER",
         quantity=Decimal("10"),
     )
     db.session.add(asset)
