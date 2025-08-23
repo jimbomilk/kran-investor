@@ -46,7 +46,7 @@ def test_buy_asset_success(mock_get_quote, client, test_user):
     assert transaction is not None
     assert transaction.type == TransactionType.BUY
     assert transaction.quantity == 10
-    assert transaction.price == Decimal("150.00")
+    assert transaction.price_per_share == Decimal("150.00")
 
 @patch('app.routes.portfolio_routes.MarketService.get_quote')
 def test_buy_asset_insufficient_funds(mock_get_quote, client, test_user):
