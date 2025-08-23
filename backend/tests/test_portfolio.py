@@ -9,7 +9,7 @@ from app import db
 def get_auth_headers(user):
     """Genera cabeceras de autenticación para un usuario."""
     access_token = create_access_token(identity=user.id)
-    return {'Authorization': f'Bearer {access_token}'}
+    return {'Authorization': 'Bearer {access_token}'}
 
 
 # --- Tests para el endpoint /buy ---
