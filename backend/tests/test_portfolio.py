@@ -74,7 +74,7 @@ def test_buy_asset_invalid_ticker(mock_get_quote, client, test_user):
     """
     mock_get_quote.return_value = None  # Simula que el ticker no fue encontrado
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "INVALIDTICKER", "quantity": "10"}
+    payload = {"ticker": "INVALID", "quantity": "10"}
     response = client.post('/api/portfolio/buy', headers=headers, json=payload)
     data = response.get_json()
 
@@ -201,7 +201,7 @@ def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
     # Setup: Darle al usuario un activo con un ticker que el servicio no encontrará
     asset = Holding(
         portfolio_id=test_user.portfolio.id,
-        ticker_symbol="INVALIDTICKER",
+        ticker_symbol="INVALID",
         quantity=Decimal("10"),
         average_purchase_price=Decimal("100.00"),
     )
@@ -211,7 +211,7 @@ def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
     mock_get_quote.return_value = None # El servicio no encuentra el ticker
 
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "INVALIDTICKER", "quantity": "10"}
+    payload = {"ticker": "INVALID", "quantity": "10"}
     response = client.post('/api/portfolio/sell', headers=headers, json=payload)
     data = response.get_json()
 
