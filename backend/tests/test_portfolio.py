@@ -200,12 +200,35 @@ def test_sell_asset_invalid_ticker(client, test_user):
     assert "not found" in data['error']
 
 def test_sell_asset_successfully(client, test_user):
-    """Prueba que un usuario puede vender un activo que posee."""
-    # (Asegúrate de que el usuario tiene este activo en la base de datos de prueba)
+    """
+    Prueba que un usuario puede vender un activo que posee.
+    ESTA VERSIÓN INCLUYE CÓDIGO DE DEPURACIÓN PARA MOSTRAR EL ERROR EXACTO.
+    """
+    # Asumimos que el usuario ya tiene >5 acciones de AAPL en la BD de prueba.
     headers = get_auth_headers(test_user)
-    payload = {"ticker": "AAPL", "quantity": "5"} # <-- ¡El payload es obligatorio!
+    
+    # Usamos el payload que, según el esquema, debería ser válido.
+    payload = {"ticker": "AAPL", "quantity": "5"}
 
-    # La petición POST debe incluir el payload con json=...
     response = client.post('/api/portfolio/sell', headers=headers, json=payload)
+
+    # ====================== INICIO DEL CÓDIGO DE DEPURACIÓN ======================
+    # Si la prueba falla, este bloque se asegurará de que veamos por qué.
+    if response.status_code != 200:
+        print("\n\n--- INICIO DEL REPORTE DE ERROR ---")
+        print(f"La API devolvió el código de estado: {response.status_code}")
+        try:
+            # Intentamos obtener el JSON con el mensaje de error.
+            error_data = response.get_json()
+            print("El cuerpo de la respuesta (error de validación) es:")
+            import json
+            print(json.dumps(error_data, indent=2)) # Imprime el JSON de forma legible
+        except Exception as e:
+            # Si la respuesta no es un JSON válido, mostramos el texto.
+            print("No se pudo decodificar la respuesta como JSON.")
+            print("Respuesta en bruto:", response.data.decode('utf-8'))
+            print(f"Error al decodificar: {e}")
+        print("--- FIN DEL REPORTE DE ERROR ---\n\n")
+    # ======================= FIN DEL CÓDIGO DE DEPURACIÓN ========================
 
     assert response.status_code == 200
