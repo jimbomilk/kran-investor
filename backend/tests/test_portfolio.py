@@ -199,13 +199,13 @@ def test_sell_asset_invalid_ticker(client, test_user):
     assert "error" in data
     assert "not found" in data['error']
 
-def test_get_profile_authenticated(client, test_user):
-    """
-    GIVEN un usuario autenticado
-    WHEN pide su perfil
-    THEN la API debe devolver 200 OK
-    """
-    headers = get_auth_headers(test_user) # Usando tu función ya corregida
-    response = client.post('/api/portfolio/sell', headers=headers) # O la ruta que sea
+def test_sell_asset_successfully(client, test_user):
+    """Prueba que un usuario puede vender un activo que posee."""
+    # (Asegúrate de que el usuario tiene este activo en la base de datos de prueba)
+    headers = get_auth_headers(test_user)
+    payload = {"ticker": "AAPL", "quantity": "5"} # <-- ¡El payload es obligatorio!
+
+    # La petición POST debe incluir el payload con json=...
+    response = client.post('/api/portfolio/sell', headers=headers, json=payload)
 
     assert response.status_code == 200
