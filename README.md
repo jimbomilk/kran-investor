@@ -252,10 +252,39 @@ Lanzamiento Público: Apertura a todo el mundo y comienzo de las competiciones o
 
 7. Cómo Empezar (Getting Started)
 Esta sección se completará a medida que el proyecto avance.
-Esta sección contiene las instrucciones para configurar y ejecutar el backend del proyecto en un entorno de desarrollo local.
+Esta sección contiene las instrucciones para configurar y ejecutar el proyecto en un entorno de desarrollo local.
 
-Bash
+### 1. Prerrequisitos
+- Python 3.8 o superior.
+- Node.js 18 o superior y npm.
+- `pip` y `venv` (generalmente incluidos con Python).
 
+### 2. Configuración del Frontend
+
+1.  **Navegar a la carpeta del frontend:**
+    ```bash
+    cd kran-investor/frontend
+    ```
+
+2.  **Instalar las dependencias de Node.js:**
+    ```bash
+    npm install
+    ```
+
+3.  **(Opcional) Configurar variables de entorno:**
+    Si tu backend se ejecuta en un puerto o dirección diferente, puedes crear un fichero `.env` en la raíz de `frontend/` para apuntar a él.
+    ```
+    VITE_API_URL=http://127.0.0.1:5000/api
+    ```
+
+4.  **Ejecutar el servidor de desarrollo de Vite:**
+    ```bash
+    npm run dev
+    ```
+
+El frontend estará disponible en `http://127.0.0.1:5173` (o el puerto que indique Vite).
+
+### 3. Configuración del Backend
 ### 1. Prerrequisitos
 - Python 3.8 o superior.
 - `pip` y `venv` (generalmente incluidos con Python).
