@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models import User, PortfolioAsset, Transaction
+from app.models import User, Holding, Transaction
 from app.services.market_service import MarketService
 from app import db
 import datetime
@@ -45,11 +45,11 @@ def buy_asset():
     # 3. Ejecutar la transacción
     user.virtual_cash -= total_cost
     
-    asset = PortfolioAsset.query.filter_by(user_id=user_id, ticker=ticker).first()
+    asset = Holding.query.filter_by(user_id=user_id, ticker=ticker).first()
     if asset:
         asset.quantity += quantity
     else:
-        asset = PortfolioAsset(user_id=user_id, ticker=ticker, quantity=quantity)
+        asset = Holding(user_id=user_id, ticker=ticker, quantity=quantity)
         db.session.add(asset)
         
     transaction = Transaction(
@@ -90,7 +90,7 @@ def sell_asset():
         return jsonify({"msg": "La cantidad debe ser un número entero positivo"}), 400
 
     # 1. Validar tenencia del activo
-    asset = PortfolioAsset.query.filter_by(user_id=user_id, ticker=ticker).first()
+    asset = Holding.query.filter_by(user_id=user_id, ticker=ticker).first()
     if not asset or asset.quantity < quantity_to_sell:
         return jsonify({"msg": "No tienes suficientes acciones para vender"}), 400
 

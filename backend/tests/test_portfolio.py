@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch
 from flask_jwt_extended import create_access_token
 
-from app.models import User, PortfolioAsset, Transaction
+from app.models import User, Holding, Transaction
 from app import db
 
 # --- Helper ---
@@ -41,7 +41,7 @@ def test_buy_asset_success(mock_get_quote, client, test_user):
     # Saldo final esperado: 10000 - 1500 = 8500
     assert test_user.virtual_cash == Decimal("8500.00")
 
-    asset = PortfolioAsset.query.filter_by(user_id=test_user.id, ticker="AAPL").first()
+    asset = Holding.query.filter_by(user_id=test_user.id, ticker="AAPL").first()
     assert asset is not None
     assert asset.quantity == 10
 
@@ -96,7 +96,7 @@ def test_sell_asset_success(mock_get_quote, client, test_user):
     THEN se debe vender el activo, añadir el dinero y registrar la transacción.
     """
     # Setup: Darle al usuario un activo para vender
-    asset = PortfolioAsset(
+    asset = Holding(
         user_id=test_user.id,
         ticker="TSLA",
         quantity=Decimal("20"),
@@ -121,7 +121,7 @@ def test_sell_asset_success(mock_get_quote, client, test_user):
     # Saldo final esperado: 10000 + 1250 = 11250.00
     assert test_user.virtual_cash == Decimal("11250.00")
 
-    updated_asset = PortfolioAsset.query.get(asset.id)
+    updated_asset = Holding.query.get(asset.id)
     assert updated_asset.quantity == 15  # 20 - 5
 
 @patch('app.routes.portfolio_routes.MarketService.get_quote')
@@ -131,7 +131,7 @@ def test_sell_all_of_asset_success(mock_get_quote, client, test_user):
     WHEN vende la cantidad total de ese activo.
     THEN el holding debe ser eliminado de la base de datos.
     """
-    asset = PortfolioAsset(
+    asset = Holding(
         user_id=test_user.id,
         ticker="TSLA",
         quantity=Decimal("20"),
@@ -150,7 +150,7 @@ def test_sell_all_of_asset_success(mock_get_quote, client, test_user):
     assert data['msg'] == "Venta de 20 acciones de TSLA a $250.00 realizada con éxito"
 
     # Verificar que el holding fue eliminado
-    deleted_asset = PortfolioAsset.query.filter_by(user_id=test_user.id, ticker="TSLA").first()
+    deleted_asset = Holding.query.filter_by(user_id=test_user.id, ticker="TSLA").first()
     assert deleted_asset is None
 
 @patch('app.routes.portfolio_routes.MarketService.get_quote')
@@ -160,7 +160,7 @@ def test_sell_asset_not_enough_quantity(mock_get_quote, client, test_user):
     WHEN intenta vender más cantidad de la que posee.
     THEN la API debe devolver un error 400.
     """
-    asset = PortfolioAsset(
+    asset = Holding(
         user_id=test_user.id,
         ticker="TSLA",
         quantity=Decimal("20"),
@@ -204,7 +204,7 @@ def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
     THEN la API debe devolver un error 404 porque no puede obtener la cotización.
     """
     # Setup: Darle al usuario un activo con un ticker que el servicio no encontrará
-    asset = PortfolioAsset(
+    asset = Holding(
         user_id=test_user.id,
         ticker="INVALIDTICKER",
         quantity=Decimal("10"),
