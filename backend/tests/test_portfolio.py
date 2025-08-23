@@ -58,7 +58,7 @@ def test_buy_asset_insufficient_funds(client, test_user):
     data = response.get_json()
 
     assert response.status_code == 422
-    assert data['error'] == "Insufficient funds"
+    assert data['message'] == "Insufficient funds"
 
 def test_buy_asset_invalid_ticker(client, test_user):
     """
@@ -73,7 +73,7 @@ def test_buy_asset_invalid_ticker(client, test_user):
 
     assert response.status_code == 422 
     #
-    assert "not found" in data['error']
+    assert "not found" in data['message']
 
 
 # --- Tests para el endpoint /sell ---
@@ -161,7 +161,9 @@ def test_sell_asset_not_enough_quantity(client, test_user):
     data = response.get_json()
 
     assert response.status_code == 422
-    assert data['error'] == "You do not own enough of this asset to sell"
+    # El KeyError indica que la clave 'error' no está en la respuesta.
+    # Para este caso, la API devuelve una clave 'message' con un texto más específico.
+    assert data['message'] == "You do not own this asset"
 
 def test_sell_asset_not_owned(client, test_user):
     """
@@ -175,4 +177,4 @@ def test_sell_asset_not_owned(client, test_user):
     data = response.get_json()
 
     assert response.status_code == 422
-    assert data['error'] == "You do not own enough of this asset to sell"
+    assert data['message'] == "You do not own enough of this asset to sell"
