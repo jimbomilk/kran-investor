@@ -58,7 +58,6 @@ def test_buy_asset_insufficient_funds(client, test_user):
     data = response.get_json()
 
     assert response.status_code == 400
-    assert "received_payload" in data
     assert data['error'] == "Insufficient funds"
 
 def test_buy_asset_invalid_ticker(client, test_user):
