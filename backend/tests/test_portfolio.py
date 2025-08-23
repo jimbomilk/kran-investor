@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch
 from flask_jwt_extended import create_access_token
 
-from app.models import User, Holding, Transaction
+from app.models import User, Holding, Transaction, TransactionType
 from app import db
 
 # --- Helper ---
@@ -44,7 +44,7 @@ def test_buy_asset_success(mock_get_quote, client, test_user):
 
     transaction = Transaction.query.filter_by(portfolio_id=test_user.portfolio.id, ticker_symbol="AAPL").first()
     assert transaction is not None
-    assert transaction.type == 'BUY'
+    assert transaction.type == TransactionType.BUY
     assert transaction.quantity == 10
     assert transaction.price == Decimal("150.00")
 
