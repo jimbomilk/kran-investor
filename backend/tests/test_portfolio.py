@@ -203,7 +203,7 @@ def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
     WHEN intenta vender ese activo.
     THEN la API debe devolver un error 404 porque no puede obtener la cotización.
     """
-    # Setup: Darle al usuario un activo con un ticker que el servicio no encontrará
+    # Setup: Darle al usuario un activo con un ticker que el servicio no encontrará nunca
     asset = Holding(
         user_id=test_user.id,
         ticker="INVALIDTICKER",
