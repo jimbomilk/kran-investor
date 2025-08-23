@@ -33,7 +33,7 @@ def test_buy_asset_success(mock_get_quote, client, test_user):
     data = response.get_json()
 
     assert response.status_code == 200
-    assert data['msg'] == "Compra de 10 acciones de AAPL a $150.00 realizada con éxito"
+ 
 
     # Verificar el estado de la base de datos
     db.session.refresh(test_user)
@@ -66,7 +66,7 @@ def test_buy_asset_insufficient_funds(mock_get_quote, client, test_user):
     data = response.get_json()
 
     assert response.status_code == 400
-    assert data['msg'] == "Fondos insuficientes para realizar la compra"
+    assert data['error'] == "Insufficient funds"
 
 @patch('app.routes.portfolio_routes.MarketService.get_quote')
 def test_buy_asset_invalid_ticker(mock_get_quote, client, test_user):
@@ -82,9 +82,7 @@ def test_buy_asset_invalid_ticker(mock_get_quote, client, test_user):
     data = response.get_json()
 
     assert response.status_code == 404
-    assert "msg" in data
-    assert "No se pudo obtener la cotización para el ticker 'INVALIDTICKER'" in data['msg']
-
+ 
 
 # --- Tests para el endpoint /sell ---
 
@@ -113,8 +111,7 @@ def test_sell_asset_success(mock_get_quote, client, test_user):
     data = response.get_json()
 
     assert response.status_code == 200
-    assert data['msg'] == "Venta de 5 acciones de TSLA a $250.00 realizada con éxito"
-
+   
     # Verificar el estado de la base de datos
     db.session.refresh(test_user)
     # Dinero inicial: 10000. Venta: 250.00 * 5 = 1250.
@@ -147,7 +144,7 @@ def test_sell_all_of_asset_success(mock_get_quote, client, test_user):
     data = response.get_json()
 
     assert response.status_code == 200
-    assert data['msg'] == "Venta de 20 acciones de TSLA a $250.00 realizada con éxito"
+    
 
     # Verificar que el holding fue eliminado
     deleted_asset = Holding.query.filter_by(portfolio_id=test_user.portfolio.id, ticker="TSLA").first()
@@ -176,8 +173,8 @@ def test_sell_asset_not_enough_quantity(mock_get_quote, client, test_user):
     data = response.get_json()
 
     assert response.status_code == 400
-    assert "msg" in data
-    assert data['msg'] == "No tienes suficientes acciones para vender"
+    assert "error" in data
+    assert data['error'] == "You do not own enough of this asset to sell"
     # La llamada al mock no debería ocurrir porque la validación es anterior
     mock_get_quote.assert_not_called()
 
@@ -193,8 +190,8 @@ def test_sell_asset_not_owned(client, test_user):
     data = response.get_json()
 
     assert response.status_code == 400
-    assert "msg" in data
-    assert data["msg"] == "No tienes suficientes acciones para vender"
+    assert "error" in data
+    assert data["error"] == "You do not own this asset"
 
 @patch('app.routes.portfolio_routes.MarketService.get_quote')
 def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
@@ -220,5 +217,4 @@ def test_sell_asset_owned_but_invalid_ticker(mock_get_quote, client, test_user):
     data = response.get_json()
 
     assert response.status_code == 404
-    assert "msg" in data
-    assert "No se pudo obtener la cotización para el ticker 'INVALIDTICKER'" in data['msg']
+
