@@ -187,8 +187,8 @@ Backend (API REST):
   - **[✓] Autenticación:** Endpoints para registro (`/auth/register`), login (`/auth/login`) y gestión de perfil de usuario con JWT (JSON Web Tokens).
   - **Cartera (Portfolio):**
     - **[✓] `GET /portfolio`**: Obtener la cartera actual del usuario (activos, cantidad, valor actual).
-    - **[✓] `POST /portfolio/buy`**: Simular la compra de un activo (validando saldo virtual). *(Nota: Usa precios simulados)*.
-    - **[✓] `POST /portfolio/sell`**: Simular la venta de un activo (validando tenencia). *(Nota: Usa precios simulados)*.
+    - **[✓] `POST /portfolio/buy`**: Simular la compra de un activo usando precios de mercado reales y validando el saldo virtual.
+    - **[✓] `POST /portfolio/sell`**: Simular la venta de un activo usando precios de mercado reales y validando la tenencia.
   - **Mercado:**
     - **[✓] `GET /api/market/quote/{ticker}`**: Endpoint para obtener la cotización de un activo específico desde la API externa.
     - **[✓] `GET /api/market/search/{query}`**: Endpoint para buscar activos.

@@ -37,28 +37,39 @@ def buy_asset():
     price = quote['price']
     total_cost = price * quantity
     user = User.query.get(user_id)
+    portfolio = user.portfolio
 
     # 2. Validar fondos
-    if user.virtual_cash < total_cost:
+    if portfolio.cash_balance < total_cost:
         return jsonify({"msg": "Fondos insuficientes para realizar la compra"}), 400
 
     # 3. Ejecutar la transacción
-    user.virtual_cash -= total_cost
+    portfolio.cash_balance -= total_cost
     
-    asset = Holding.query.filter_by(user_id=user_id, ticker=ticker).first()
-    if asset:
-        asset.quantity += quantity
+    holding = Holding.query.filter_by(portfolio_id=portfolio.id, ticker_symbol=ticker).first()
+    
+    if holding:
+        # Calcular el nuevo precio promedio ponderado
+        current_value = holding.quantity * holding.average_purchase_price
+        new_value = quantity * price
+        total_quantity = holding.quantity + quantity
+        holding.average_purchase_price = (current_value + new_value) / total_quantity
+        holding.quantity = total_quantity
     else:
-        asset = Holding(user_id=user_id, ticker=ticker, quantity=quantity)
-        db.session.add(asset)
+        holding = Holding(
+            portfolio_id=portfolio.id, 
+            ticker_symbol=ticker, 
+            quantity=quantity,
+            average_purchase_price=price
+        )
+        db.session.add(holding)
         
     transaction = Transaction(
-        user_id=user_id,
-        ticker=ticker,
+        portfolio_id=portfolio.id,
+        ticker_symbol=ticker,
         quantity=quantity,
-        price=price,
-        type='buy',
-        timestamp=datetime.datetime.utcnow()
+        price_per_share=price,
+        type='BUY' # Usar el enum
     )
     db.session.add(transaction)
 
@@ -89,9 +100,12 @@ def sell_asset():
     except (ValueError, TypeError):
         return jsonify({"msg": "La cantidad debe ser un número entero positivo"}), 400
 
+    user = User.query.get(user_id)
+    portfolio = user.portfolio
+
     # 1. Validar tenencia del activo
-    asset = Holding.query.filter_by(user_id=user_id, ticker=ticker).first()
-    if not asset or asset.quantity < quantity_to_sell:
+    holding = Holding.query.filter_by(portfolio_id=portfolio.id, ticker_symbol=ticker).first()
+    if not holding or holding.quantity < quantity_to_sell:
         return jsonify({"msg": "No tienes suficientes acciones para vender"}), 400
 
     # 2. Obtener cotización real desde el MarketService
@@ -101,16 +115,24 @@ def sell_asset():
 
     price = quote['price']
     total_value = price * quantity_to_sell
-    user = User.query.get(user_id)
 
     # 3. Ejecutar la transacción
-    user.virtual_cash += total_value
-    asset.quantity -= quantity_to_sell
+    portfolio.cash_balance += total_value
+    holding.quantity -= quantity_to_sell
 
-    if asset.quantity == 0:
-        db.session.delete(asset)
+    if holding.quantity == 0:
+        db.session.delete(holding)
     
-    # (Opcional) Registrar la transacción de venta
+    # Registrar la transacción de venta
+    transaction = Transaction(
+        portfolio_id=portfolio.id,
+        ticker_symbol=ticker,
+        quantity=quantity_to_sell,
+        price_per_share=price,
+        type='SELL' # Usar el enum
+    )
+    db.session.add(transaction)
+    
     db.session.commit()
 
     return jsonify({"msg": f"Venta de {quantity_to_sell} acciones de {ticker} a ${price:.2f} realizada con éxito"}), 200
