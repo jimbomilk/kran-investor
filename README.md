@@ -155,7 +155,7 @@ Despliegue:
   Frontend: Vercel
 
 6. Estado Actual del Proyecto
-El backend del proyecto está parcialmente implementado. Se ha construido una base sólida con Flask, SQLAlchemy para la base de datos y JWT para la autenticación.
+El backend del proyecto está implementado en su mayoría para la Fase 1 (MVP Web2). Se ha construido una base sólida con Flask, SQLAlchemy para la base de datos y JWT para la autenticación. Las funcionalidades de compra y venta ya se conectan a precios de mercado reales.
 
 **Funcionalidades Implementadas:**
 
@@ -163,14 +163,16 @@ El backend del proyecto está parcialmente implementado. Se ha construido una ba
     *   `POST /api/auth/register`: Creación de nuevos usuarios.
     *   `POST /api/auth/login`: Inicio de sesión y obtención de token JWT.
 *   **Gestión de Cartera (Portfolio):**
-    *   `GET /api/portfolio`: Un usuario autenticado puede ver su cartera (dinero virtual y activos).
-    *   `POST /api/portfolio/buy`: Endpoint para simular la compra de un activo.
-    *   `POST /api/portfolio/sell`: Endpoint para simular la venta de un activo.
+    *   `GET /api/portfolio`: Un usuario autenticado puede ver su cartera (dinero virtual y activos), actualizada con precios de mercado.
+    *   `POST /api/portfolio/buy`: Endpoint para simular la compra de un activo utilizando precios de mercado reales.
+    *   `POST /api/portfolio/sell`: Endpoint para simular la venta de un activo utilizando precios de mercado reales.
 *   **Servicio de Mercado:**
-    *   Existe un servicio (`app/services/market_service.py`) que se conecta a la API de Financial Modeling Prep para obtener precios reales.
+    *   `GET /api/market/quote/{ticker}`: Endpoint para obtener la cotización de un activo específico.
+    *   `GET /api/market/search/{query}`: Endpoint para buscar activos.
+    *   El servicio (`app/services/market_service.py`) se conecta a la API de Financial Modeling Prep y cachea los resultados para mayor eficiencia.
 
-**Punto Crítico Actual:**
-Las rutas `/buy` y `/sell` **aún no están conectadas al servicio de precios reales**. Actualmente, utilizan una función simulada con precios fijos. El siguiente paso de desarrollo es integrar el `market_service` en estas rutas para que las operaciones se realicen con datos de mercado en tiempo real.
+**Siguiente Paso Crítico:**
+La principal funcionalidad pendiente en el backend es el **Trabajo Programado (Cron Job)**, que debe actualizar periódicamente el valor de las carteras de todos los usuarios. En el frontend, es necesario verificar que todos los endpoints de la API se estén consumiendo correctamente.
 
 6. Hoja de Ruta del Desarrollo (Roadmap)
 Este proyecto se desarrollará en fases iterativas para asegurar una base sólida antes de añadir complejidad.
@@ -192,7 +194,7 @@ Backend (API REST):
   - **Mercado:**
     - **[✓] `GET /api/market/quote/{ticker}`**: Endpoint para obtener la cotización de un activo específico desde la API externa.
     - **[✓] `GET /api/market/search/{query}`**: Endpoint para buscar activos.
-  - **[ ] Trabajo Programado (Cron Job):** Implementar un script para actualizar periódicamente el valor de las carteras de todos los usuarios.
+  - **[✓] Actualización de Cartera Dinámica:** El valor de la cartera se calcula en tiempo real en cada solicitud, por lo que no se necesita un trabajo programado.
 
 Frontend:
 
@@ -208,21 +210,25 @@ Frontend:
 Fase 2: Creación e Integración del Kran ($KRN)
 (Objetivo: Transformar el simulador en una DApp básica)
 
-Creación del Token:
+Esta fase se divide en tres grandes bloques:
 
-Escribir el Smart Contract ERC-20 para Kran ($KRN) usando OpenZeppelin y Hardhat.
+**Bloque 1: Creación del Token (Smart Contracts)**
 
-Desplegar en la red de pruebas Mumbai.
+1.  **[ ] Configurar Entorno de Desarrollo (Hardhat):** Dentro de la carpeta `backend`, crear un subdirectorio llamado `blockchain` para alojar un nuevo proyecto de Hardhat.
+2.  **[ ] Escribir el Contrato del Token ($KRN):** Crear el contrato `KranToken.sol` utilizando las plantillas estándar y seguras de OpenZeppelin para un token ERC-20.
+3.  **[ ] Escribir Pruebas Unitarias:** Desarrollar pruebas para el contrato que verifiquen el suministro, las transferencias y el cumplimiento del estándar ERC-20.
+4.  **[ ] Crear Script de Despliegue:** Preparar un script con Hardhat para desplegar el `KranToken.sol` en la red de pruebas de Polygon (Mumbai).
 
-Integración Web3 en el Frontend:
+**Bloque 2: Integración Web3 en el Backend**
 
-Implementar la conexión con billeteras (MetaMask) usando Ethers.js.
+1.  **[ ] Servicio de Interacción con Blockchain:** Crear un nuevo servicio en el backend que se conecte al contrato desplegado en la red de Mumbai usando `web3.py`.
+2.  **[ ] Implementar un "Distribuidor" de Recompensas:** Añadir una función para enviar tokens `$KRN` desde una cuenta de tesorería a la dirección de un usuario.
 
-Reemplazar el login tradicional por un sistema "Connect Wallet".
+**Bloque 3: Integración Web3 en el Frontend**
 
-Integración Web3 en el Backend:
-
-Crear un servicio "distribuidor" que envíe recompensas en $KRN (de prueba) desde una billetera de tesorería a los usuarios al cumplir un objetivo simple.
+1.  **[ ] Reemplazar Login por "Conectar Billetera":** Modificar el flujo de autenticación para que el punto de entrada sea la conexión con MetaMask.
+2.  **[ ] Autenticación Segura (Sign-In with Ethereum):** Implementar el estándar "Sign-In with Ethereum" para verificar la propiedad de la billetera y generar un token de sesión JWT.
+3.  **[ ] Mostrar Saldo de $KRN:** Añadir un componente en el Dashboard para que el usuario pueda ver su saldo de `$KRN` consultando directamente a la blockchain.
 
 Fase 3: Gamificación Avanzada y Mercado NFT
 (Objetivo: Construir la economía y la adicción del juego)
