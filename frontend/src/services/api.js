@@ -9,6 +9,14 @@ const apiClient = axios.create({
   },
 });
 
+const setAuthToken = (token) => {
+  if (token) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete apiClient.defaults.headers.common['Authorization']
+  }
+};
+
 // Interceptor para añadir automáticamente el token JWT a las cabeceras
 // de las peticiones autenticadas.
 apiClient.interceptors.request.use(
@@ -25,6 +33,7 @@ apiClient.interceptors.request.use(
 );
 
 export default {
+  setAuthToken,
   register: (userData) => apiClient.post('/auth/register', userData),
   login: (credentials) => apiClient.post('/auth/login', credentials),
   getPortfolio: () => apiClient.get('/portfolio'),

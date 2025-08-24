@@ -10,3 +10,4 @@ pytest
 marshmallow
 flask-marshmallow 
 requests
+Flask-Cors
