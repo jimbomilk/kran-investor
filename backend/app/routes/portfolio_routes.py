@@ -4,6 +4,7 @@ from app.models import User, Holding, Transaction
 from app.services.market_service import MarketService
 from app import db
 import datetime
+from decimal import Decimal
 
 portfolio_bp = Blueprint('portfolio_bp', __name__, url_prefix='/api/portfolio')
 
@@ -34,7 +35,7 @@ def buy_asset():
     if not quote or 'price' not in quote:
         return jsonify({"msg": f"No se pudo obtener la cotización para el ticker '{ticker}'"}), 404
 
-    price = quote['price']
+    price = Decimal(quote['price'])
     total_cost = price * quantity
     user = User.query.get(user_id)
     portfolio = user.portfolio
@@ -113,7 +114,7 @@ def sell_asset():
     if not quote or 'price' not in quote:
         return jsonify({"msg": f"No se pudo obtener la cotización para el ticker '{ticker}'"}), 404
 
-    price = quote['price']
+    price = Decimal(quote['price'])
     total_value = price * quantity_to_sell
 
     # 3. Ejecutar la transacción

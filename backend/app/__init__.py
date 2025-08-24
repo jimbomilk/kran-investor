@@ -28,7 +28,7 @@ def create_app(config_class=Config):
 
     # Importamos y registramos los Blueprints
     from .routes.auth import auth_bp
-    from .routes.portfolio import portfolio_bp
+    from .routes.portfolio_routes import portfolio_bp
     from .routes.market_routes import market_bp
     app.register_blueprint(market_bp)
     app.register_blueprint(auth_bp)

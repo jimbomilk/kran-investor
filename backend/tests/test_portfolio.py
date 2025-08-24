@@ -9,7 +9,7 @@ from app import db
 # --- Helper ---
 def get_auth_headers(user_id):
     """Genera cabeceras de autenticación para un ID de usuario."""
-    access_token = create_access_token(identity=user_id)
+    access_token = create_access_token(identity=str(user_id))
     return {'Authorization': f'Bearer {access_token}'}
 
 
@@ -191,8 +191,8 @@ def test_sell_asset_not_enough_quantity(mock_get_quote, client, test_user):
 
     assert response.status_code == 400
     assert data['msg'] == "No tienes suficientes acciones para vender"
-    # A diferencia de antes, la validación ocurre DESPUÉS de llamar a la API de precios
-    mock_get_quote.assert_called_once_with("NVDA")
+    # La llamada al mock no debería ocurrir porque la validación es anterior
+    mock_get_quote.assert_not_called()
 
 
 def test_sell_asset_not_owned(client, test_user):
