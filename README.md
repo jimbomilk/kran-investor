@@ -344,3 +344,7 @@ El frontend estará disponible en `http://127.0.0.1:5173` (o el puerto que indiq
     ```
 
 El servidor estará disponible en `http://127.0.0.1:5000`. Ya puedes usar una herramienta como Postman o Insomnia para probar los endpoints de la API.
+
+
+Prompt para instruir al agente al inicio de cada implementación: 
+Hola. Por favor, quiero implementar algunas funcionalidades nuevas del proyecto kran-investor. Puedes recoger el contexto? . Utiliza los ficheros creados y el fichero readme.md

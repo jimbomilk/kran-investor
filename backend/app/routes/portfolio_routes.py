@@ -8,6 +8,38 @@ from decimal import Decimal
 
 portfolio_bp = Blueprint('portfolio_bp', __name__, url_prefix='/api/portfolio')
 
+
+@portfolio_bp.route('/', methods=['GET'])
+@jwt_required()
+def get_portfolio():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    portfolio = user.portfolio
+
+    holdings_data = []
+    total_holdings_value = Decimal('0.0')
+
+    for holding in portfolio.holdings:
+        quote = MarketService.get_quote(holding.ticker_symbol)
+        current_price = Decimal(quote.get('price', 0)) if quote else holding.average_purchase_price
+        current_value = holding.quantity * current_price
+        total_holdings_value += current_value
+        holdings_data.append({
+            'ticker_symbol': holding.ticker_symbol,
+            'quantity': holding.quantity,
+            'average_purchase_price': float(holding.average_purchase_price),
+            'current_market_value': float(current_value)
+        })
+
+    total_portfolio_value = portfolio.cash_balance + total_holdings_value
+
+    return jsonify({
+        'cash_balance': float(portfolio.cash_balance),
+        'total_portfolio_value': float(total_portfolio_value),
+        'holdings': holdings_data
+    })
+
+
 @portfolio_bp.route('/buy', methods=['POST'])
 @jwt_required()
 def buy_asset():

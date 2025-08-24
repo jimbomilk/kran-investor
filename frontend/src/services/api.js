@@ -37,5 +37,8 @@ export default {
   register: (userData) => apiClient.post('/auth/register', userData),
   login: (credentials) => apiClient.post('/auth/login', credentials),
   getPortfolio: () => apiClient.get('/portfolio'),
-  // Aquí se añadirán más llamadas a la API (buy, sell, quote, etc.)
+  getQuote: (ticker) => apiClient.get(`/market/quote/${ticker}`),
+  searchAssets: (query) => apiClient.get(`/market/search/${query}`),
+  buyAsset: (data) => apiClient.post('/portfolio/buy', data),
+  sellAsset: (data) => apiClient.post('/portfolio/sell', data),
 };
